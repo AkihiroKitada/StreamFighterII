@@ -19,4 +19,9 @@ Sample implementation to deliver "Shoryuken" and other Ryu's deathblows based on
 
 You have to prepare additional gif files and mp3 files to run this application becasue they are grabbed from other public site (they are not mine). Please get those files according to the instruction below and put them under /src/main/resources/quitada.
 
+* Sound files for each deathblows, punch, kick and back ground music (for Ryu stage)
+  * Shoryuken: get a mp3 file from the following site and save as "shouryuuken.mp3".
+    * https://www.zedge.net/ringtone/1454346/
+  * Hadouken: get a mp3 file from the following site and
+    * https://www.zedge.net/ringtone/1309265/
 
