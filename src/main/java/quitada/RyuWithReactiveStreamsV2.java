@@ -1,89 +1,84 @@
-package io.pivotal.akitada;
+package quitada;
 
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
-import javafx.event.EventHandler;
 import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
-import javafx.scene.input.KeyEvent;
 import javafx.scene.media.AudioClip;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 import javafx.stage.Stage;
+import reactor.core.publisher.Flux;
 
-public class RyuWithoutReactiveStreamsV2 extends Application {
+public class RyuWithReactiveStreamsV2 extends Application {
+  static private Scene mainScene;
+  static private GraphicsContext graphicsContext;
+
+  static private final int WIDTH = 924;
+  static private final int HEIGHT = 784;
+  static private final int MARGIN = 32;
+  static private final int KEY_WIDTH = 245;
+  static private final int KEY_HIGHT = 239;
+  static private final int RYU_POS_X = MARGIN *2 + KEY_WIDTH *2;
+  static private final int RYU_POS_Y = KEY_HIGHT *2;
+  static private final int DEFAULT_FRAME = 10;
+
+  static private final String UP = "W";
+  static private final String LEFT = "A";
+  static private final String RIGHT = "S";
+  static private final String DOWN = "Z";
+  static private final String PUNCH = "X";
+  static private final String KICK = "C";
+  static private final String[] SYORYU_CL = {"SsZzSZX","SsZzZSX"};
+  static private final String[] HADOU_CL = {"ZzZSzsSX","ZzZSszSX","ZzSZzsSX","ZzSZszSX"};
+  static private final String[] TATSUMAKI_CL = {"ZzZAzaAC","ZzZAazAC","ZzAZazAC","ZzAZzaAC"};
+
+  static private Image up;
+  static private Image upGreen;
+
+  static private Image down;
+  static private Image downGreen;
+
+  static private Image left;
+  static private Image leftGreen;
+
+  static private Image right;
+  static private Image rightGreen;
+
+  static private Image punch;
+  static private Image punchGreen;
+
+  static private Image kick;
+  static private Image kickGreen;
+
+  static private Image ryuKamae[];
+  static private Image ryuSyoryuken[];
+  static private Image ryuTatsumaki[];
+  static private Image ryuPunch[];
+  static private Image ryuKick[];
+  static private Image ryuHadou[];
+
+  static private HashSet<String> currentlyActiveKeys;
+
+  static private long stime = 0;
+  static private long foreno = -1;
+  static private long animationFrame = DEFAULT_FRAME;
+  static private int ryuAction = 0;
+
+  static private Media media;
+  static private MediaPlayer mp;
+
   public static void main(String[] args) {
     launch(args);
   }
 
-  static Scene mainScene;
-  static GraphicsContext graphicsContext;
-
-  static final int WIDTH = 924;
-  static final int HEIGHT = 784;
-  static final int MARGIN = 32;
-  static final int KEY_WIDTH = 245;
-  static final int KEY_HIGHT = 239;
-  static final int RYU_POS_X = MARGIN *2 + KEY_WIDTH *2;
-  static final int RYU_POS_Y = KEY_HIGHT *2;
-  static final int DEFAULT_FRAME = 10;
-
-  static final String UP = "W";
-  static final String LEFT = "A";
-  static final String RIGHT = "S";
-  static final String DOWN = "Z";
-  static final String PUNCH = "X";
-  static final String KICK = "C";
-  static final String[] SYORYU_CL = {"SsZzSZX","SsZzZSX"};
-  static final String[] HADOU_CL = {"ZzZSzsSX","ZzZSszSX","ZzSZzsSX","ZzSZszSX"};
-  static final String[] TATSUMAKI_CL = {"ZzZAzaAC","ZzZAazAC","ZzAZazAC","ZzAZzaAC"};
-
-  static Image up;
-  static Image upGreen;
-
-  static Image down;
-  static Image downGreen;
-
-  static Image left;
-  static Image leftGreen;
-
-  static Image right;
-  static Image rightGreen;
-
-  static Image punch;
-  static Image punchGreen;
-
-  static Image kick;
-  static Image kickGreen;
-
-  static Image ryuKamae[];
-  static Image ryuSyoryuken[];
-  static Image ryuTatsumaki[];
-  static Image ryuPunch[];
-  static Image ryuKick[];
-  static Image ryuHadou[];
-
-
-  static HashSet<String> currentlyActiveKeys;
-  static List<String> commandList;
-
-  static long stime = 0;
-  static long foreno = -1;
-  static long animationFrame = DEFAULT_FRAME;
-  static int ryuAction = 0;
-
-  static Media media;
-  static MediaPlayer mp;
-
   @Override
   public void start(Stage mainStage) {
-    mainStage.setTitle("Streamless Fighter II - Ryu's Deathblows tester");
+    mainStage.setTitle("Stream Fighter II - Ryu's Deathblows tester based on Reactive Streams");
 
     Group root = new Group();
     mainScene = new Scene(root);
@@ -96,15 +91,7 @@ public class RyuWithoutReactiveStreamsV2 extends Application {
 
     graphicsContext = canvas.getGraphicsContext2D();
 
-    /*String[] formatNames= ImageIO.getWriterFormatNames();
-    for(int i=0;i < formatNames.length ; i++){
-      System.out.print(formatNames[i] + " ");
-    }
-    System.out.print("\n");*/
-
     loadGraphics();
-
-    commandList = new ArrayList<String>();
 
     new AnimationTimer() {
       long interval = 40 * 1000000L;   //40 millisecs
@@ -124,8 +111,7 @@ public class RyuWithoutReactiveStreamsV2 extends Application {
       }
     }.start();
 
-    //String path = getResource("ryu-stage.mp3").toString();
-    media = new Media(getResource("ryu-stage.mp3").toString());
+    media = new Media(getResource("ryu-stage.mp3"));
     mp = new MediaPlayer(media);
     mp.setCycleCount(MediaPlayer.INDEFINITE);
     mp.setVolume(0.5);
@@ -137,39 +123,38 @@ public class RyuWithoutReactiveStreamsV2 extends Application {
   private static void prepareActionHandlers() {
     // use a set so duplicates are not possible
     currentlyActiveKeys = new HashSet<String>();
-    mainScene.setOnKeyPressed(new EventHandler<KeyEvent>() {
-      @Override
-      public void handle(KeyEvent event) {
-        String keyEvent = event.getCode().toString();
-        currentlyActiveKeys.add(keyEvent);
-        if (keyActionChecker(keyEvent)) {
-          commandList.add(keyEvent);
-          if (keyEvent.equals(PUNCH) || keyEvent.equals(KICK)) {
-            String cl = readCommand();
-            if (cl.contains(SYORYU_CL[0]) || cl.contains(SYORYU_CL[1])) {
-              startAction(3, 17, "shouryuuken.mp3");
-            } else if (cl.contains(HADOU_CL[0]) || cl.contains(HADOU_CL[1]) || cl.contains(HADOU_CL[2]) || cl.contains(HADOU_CL[3])) {
-              startAction(4, 14, "hadouken.mp3");
-            } else if (cl.contains(TATSUMAKI_CL[0]) || cl.contains(TATSUMAKI_CL[1]) || cl.contains(TATSUMAKI_CL[2]) || cl.contains(TATSUMAKI_CL[3])) {
-              startAction(5, 27, "tatsumaki_senpukyaku.mp3");
-            } else if (cl.contains(PUNCH)) {
-              startAction(1, 8, "punch.mp3");
-            } else {
-              // should be KICK
-              startAction(2, 15, "kick.mp3");
-            }
-          }
-        }
-      }
-    });
-    mainScene.setOnKeyReleased(new EventHandler<KeyEvent>() {
-      @Override
-      public void handle(KeyEvent event) {
-        String keyEvent = event.getCode().toString();
-        currentlyActiveKeys.remove(keyEvent);
-        if (keyActionChecker(keyEvent)) {
-          commandList.add(keyEvent.toLowerCase());
-        }
+    Flux.create(sink -> {
+      mainScene.setOnKeyPressed(keyEvent -> {
+        String pressedKey = keyEvent.getCode().toString();
+        currentlyActiveKeys.add(pressedKey);
+        sink.next(pressedKey);
+      });
+      mainScene.setOnKeyReleased(keyEvent -> {
+        String releasedKey = keyEvent.getCode().toString();
+        currentlyActiveKeys.remove(releasedKey);
+        sink.next(releasedKey.toLowerCase());
+      });
+    }).filter(keyEvent -> {
+      // accept only the specific key events
+      String key = ((String) keyEvent).toUpperCase();
+      return key.equals(UP) || key.equals(LEFT) || key.equals(RIGHT) || key.equals(DOWN) || key.equals(PUNCH) || key.equals(KICK);
+    }).bufferUntil(keyEvent -> {
+      // buffer until Punch button or Kick button is pressed
+      return ((String) keyEvent).equals(PUNCH) || ((String) keyEvent).equals(KICK);
+    }).subscribe(commandList -> {
+      String[] cl = {""};
+      commandList.forEach(keyEvent -> cl[0] += (String) keyEvent);
+      if (cl[0].contains(SYORYU_CL[0]) || cl[0].contains(SYORYU_CL[1])) {
+        startAction(3, 17, "shouryuuken.mp3");
+      } else if (cl[0].contains(HADOU_CL[0]) || cl[0].contains(HADOU_CL[1]) || cl[0].contains(HADOU_CL[2]) || cl[0].contains(HADOU_CL[3])) {
+        startAction(4, 14, "hadouken.mp3");
+      } else if (cl[0].contains(TATSUMAKI_CL[0]) || cl[0].contains(TATSUMAKI_CL[1]) || cl[0].contains(TATSUMAKI_CL[2])) {
+        startAction(5, 27, "tatsumaki_senpukyaku.mp3");
+      } else if (cl[0].contains(PUNCH)){
+        startAction(1, 8, "punch.mp3");
+      } else {
+        // should be KICK
+        startAction(2, 15, "kick.mp3");
       }
     });
   }
@@ -312,7 +297,7 @@ public class RyuWithoutReactiveStreamsV2 extends Application {
   }
 
   private static String getResource(String filename) {
-    return RyuWithoutReactiveStreamsV2.class.getResource(filename).toString();
+    return RyuWithReactiveStreamsV2.class.getResource(filename).toString();
   }
 
   private static void keyAnimation() {
@@ -391,17 +376,8 @@ public class RyuWithoutReactiveStreamsV2 extends Application {
     }
   }
 
-  private static String readCommand() {
-    String cl = "";
-    for (String str : commandList) {
-      cl = cl + str;
-    }
-    //System.out.println("commandlist=" + cl);
-    return cl;
-  }
-
   private static void ryuVoice(String file) {
-    AudioClip clip = new AudioClip(getResource(file).toString());
+    AudioClip clip = new AudioClip(getResource(file));
     clip.play();
   }
 
@@ -411,15 +387,10 @@ public class RyuWithoutReactiveStreamsV2 extends Application {
   }
 
   private static void startAction(int action, long frame, String voice) {
-    stime = 0;
-    foreno = -1;
     ryuVoice(voice);
     ryuAction = action;
+    stime = 0;
+    foreno = -1;
     animationFrame = frame;
-    commandList.clear();
-  }
-
-  private static boolean keyActionChecker(String keyEvent) {
-    return keyEvent.equals(UP) || keyEvent.equals(LEFT) || keyEvent.equals(RIGHT) || keyEvent.equals(DOWN) || keyEvent.equals(PUNCH) || keyEvent.equals(KICK);
   }
 }
