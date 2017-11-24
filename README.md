@@ -13,7 +13,7 @@ Sample implementation to deliver "Shoryuken" and other Ryu's deathblows based on
   * [V3 only] going back - keep pressing "A", going forward - keep pressing "S"
 * Puch key: "X"
 * Kick key: "C"
-* Syoruken command: right -> donw -> [right + down with punch]
+* Syoruken command: right -> down -> [right + down with punch]
 * Hadouken command: down -> [down + right] -> [right with punch]
 * Tatsumaki-senpukyaku command: down -> [down + left] -> [left with kick] 
 
