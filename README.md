@@ -5,10 +5,12 @@ Sample implementation to deliver "Shoryuken" and other Ryu's deathblows based on
 
 * quitada.RyuWithoutReactiveStreamsV2 - This is a class without Reactive Streams. It deliver dethblows with driven by key events.
 * quitada.RyuWithReactiveStreamsV2 - This is a class with Reactive Streams, based on Reactor's Flunx and FluxSink. It deliver dethblows with driven by Flux.subscribe until the buffered data strem based on key events is flahsed by pushing punch key or kick key.
+* quitada.RyuWithReactiveStreamsV3 - This is a class with Reactive Streams, based on Reactor's Flunx and FluxSink. It deliver dethblows with driven by Flux.subscribe until the buffered data strem based on key events is flahsed by pushing punch key or kick key, with more sophisticated animation compared with quitada.RyuWithReactiveStreamsV2 (adding animations for going back and forward).
 
 ## Operation
 
 * Direcion key: up - "W", down - "Z", left - "A", right - "S"
+  * [V3 only] going back - keep pressing "A", going forward - keep pressing "S"
 * Puch key: "X"
 * Kick key: "C"
 * Syoruken command: right -> donw -> [right + down with punch]
@@ -46,6 +48,10 @@ You have to prepare additional gif files and mp3 files to run this application b
     * http://www.fightersgeneration.com/characters3/ryu-a4.html
   * Kick: get an animated gif file at the left side of upper pane from the following site, divide it into 15 static gif files and save each files like ryu-kick-0.gif, ryu-kick-1.gif, ... , ryu-kick-14.gif in order.
     * http://www.fightersgeneration.com/characters3/ryu-a4.html
+  * Going forward: get an animated gif file at the left side of second pane from the following site, divide it into 11 static gif files and save each files like ryu-walkf-0.gif, ryu-walkf-1.gif, ... , ryu-walkf-10.gif in order. This is only used for quitada.RyuWithReactiveStreamsV3.
+    * http://www.fightersgeneration.com/characters3/ryu-a.html
+  * Going back: get an animated gif file at the left side of third pane from the following site, divide it into 11 static gif files and save each files like ryu-walkb-0.gif, ryu-walkb-1.gif, ... , ryu-walkb-10.gif in order. This is only used for quitada.RyuWithReactiveStreamsV3.
+    * http://www.fightersgeneration.com/characters3/ryu-a.html
   * Kamae (default action): get an animated gif file at the second left side of upper pane from the following site, divide it into 10 static gif files and save each files like ryu-kamae-0.gif, ryu-kamae-1.gif, ... , ryu-kamae-9.gif in order.
     * http://www.fightersgeneration.com/characters3/ryu-a.html
 
