@@ -132,15 +132,9 @@ public class RyuWithReactiveStreamsV3 extends Application {
         String pressedKey = keyEvent.getCode().toString();
         currentlyActiveKeys.add(pressedKey);
         if (pressedKey.equals(RIGHT) && ryuAction != 6) {
-          ryuAction = 6;
-          stime = 0;
-          foreno = -1;
-          animationFrame = 11;
+          resetAction(6,11, null);
         } else if (pressedKey.equals(LEFT) && ryuAction != 7) {
-          ryuAction = 7;
-          stime = 0;
-          foreno = -1;
-          animationFrame = 11;
+          resetAction(7,11,null);
         }
         sink.next(pressedKey);
       });
@@ -148,9 +142,7 @@ public class RyuWithReactiveStreamsV3 extends Application {
         String releasedKey = keyEvent.getCode().toString();
         currentlyActiveKeys.remove(releasedKey);
         if ((releasedKey.equals(RIGHT) && ryuAction == 6) || (releasedKey.equals(LEFT) && ryuAction == 7)) {
-          stime = 0;
-          foreno = -1;
-          reset();
+          resetDefaultAction();
         }
         sink.next(releasedKey.toLowerCase());
       });
@@ -165,15 +157,15 @@ public class RyuWithReactiveStreamsV3 extends Application {
       String[] cl = {""};
       commandList.forEach(keyEvent -> cl[0] += (String) keyEvent);
       if (cl[0].contains(SYORYU_CL[0]) || cl[0].contains(SYORYU_CL[1])) {
-        startAction(3, 17, "shouryuuken.mp3");
+        resetAction(3, 17, "shouryuuken.mp3");
       } else if (cl[0].contains(HADOU_CL[0]) || cl[0].contains(HADOU_CL[1]) || cl[0].contains(HADOU_CL[2]) || cl[0].contains(HADOU_CL[3])) {
-        startAction(4, 14, "hadouken.mp3");
+        resetAction(4, 14, "hadouken.mp3");
       } else if (cl[0].contains(TATSUMAKI_CL[0]) || cl[0].contains(TATSUMAKI_CL[1]) || cl[0].contains(TATSUMAKI_CL[2])) {
-        startAction(5, 27, "tatsumaki_senpukyaku.mp3");
+        resetAction(5, 27, "tatsumaki_senpukyaku.mp3");
       } else if (cl[0].contains(PUNCH) && ryuAction != 1){
-        startAction(1, 8, "punch.mp3");
+        resetAction(1, 8, "punch.mp3");
       } else if (cl[0].contains(KICK) && ryuAction != 2) {
-        startAction(2, 15, "kick.mp3");
+        resetAction(2, 15, "kick.mp3");
       }
     });
   }
@@ -392,43 +384,43 @@ public class RyuWithReactiveStreamsV3 extends Application {
       case 1:
         graphicsContext.drawImage(ryuPunch[mod], RYU_POS_X + STATIC_MARGIN + TATSUMAKI_MARGIN, RYU_POS_Y - 217, 263, 217);
         if (mod == 7) {
-          reset();
+          resetDefaultAction();
         }
         break;
       case 2:
         graphicsContext.drawImage(ryuKick[mod], RYU_POS_X + STATIC_MARGIN + TATSUMAKI_MARGIN , RYU_POS_Y - 240, 306, 240);
         if (mod == 14) {
-          reset();
+          resetDefaultAction();
         }
         break;
       case 3:
         graphicsContext.drawImage(ryuSyoryuken[mod], RYU_POS_X + STATIC_MARGIN + TATSUMAKI_MARGIN, RYU_POS_Y - 414, 211, 414);
         if (mod == 16) {
-          reset();
+          resetDefaultAction();
         }
         break;
       case 4:
         graphicsContext.drawImage(ryuHadou[mod], RYU_POS_X + STATIC_MARGIN + TATSUMAKI_MARGIN, RYU_POS_Y - 215, 282, 215);
         if (mod == 13) {
-          reset();
+          resetDefaultAction();
         }
         break;
       case 5:
         graphicsContext.drawImage(ryuTatsumaki[mod], RYU_POS_X , RYU_POS_Y - 290, 329, 290);
         if (mod == 26) {
-          reset();
+          resetDefaultAction();
         }
         break;
       case 6:
         graphicsContext.drawImage(ryuWalkF[mod], RYU_POS_X + TATSUMAKI_MARGIN , RYU_POS_Y - 234, 232, 234);
         if (mod == 10) {
-          reset();
+          resetDefaultAction();
         }
         break;
       case 7:
         graphicsContext.drawImage(ryuWalkB[mod], RYU_POS_X + TATSUMAKI_MARGIN , RYU_POS_Y - 234, 232, 234);
         if (mod == 10) {
-          reset();
+          resetDefaultAction();
         }
         break;
       default:
@@ -441,13 +433,14 @@ public class RyuWithReactiveStreamsV3 extends Application {
     clip.play();
   }
 
-  private static void reset() {
-    ryuAction = 0;
-    animationFrame = DEFAULT_FRAME;
+  private static void resetDefaultAction() {
+    resetAction(0,DEFAULT_FRAME,null);
   }
 
-  private static void startAction(int action, long frame, String voice) {
-    ryuVoice(voice);
+  private static void resetAction(int action, long frame, String voice) {
+    if (voice != null) {
+      ryuVoice(voice);
+    }
     ryuAction = action;
     stime = 0;
     foreno = -1;
