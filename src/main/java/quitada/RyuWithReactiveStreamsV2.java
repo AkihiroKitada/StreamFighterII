@@ -1,5 +1,8 @@
 package quitada;
 
+import org.reactivestreams.Subscription;
+
+import java.util.ArrayList;
 import java.util.HashSet;
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
@@ -12,7 +15,9 @@ import javafx.scene.media.AudioClip;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 import javafx.stage.Stage;
+import reactor.core.publisher.BaseSubscriber;
 import reactor.core.publisher.Flux;
+import reactor.core.scheduler.Schedulers;
 
 public class RyuWithReactiveStreamsV2 extends Application {
   static private Scene mainScene;
@@ -123,7 +128,8 @@ public class RyuWithReactiveStreamsV2 extends Application {
   private static void prepareActionHandlers() {
     // use a set so duplicates are not possible
     currentlyActiveKeys = new HashSet<String>();
-    Flux.create(sink -> {
+
+    Flux flux = Flux.create(sink -> {
       mainScene.setOnKeyPressed(keyEvent -> {
         String pressedKey = keyEvent.getCode().toString();
         currentlyActiveKeys.add(pressedKey);
@@ -137,26 +143,64 @@ public class RyuWithReactiveStreamsV2 extends Application {
     }).filter(keyEvent -> {
       // accept only the specific key events
       String key = ((String) keyEvent).toUpperCase();
-      return key.equals(UP) || key.equals(LEFT) || key.equals(RIGHT) || key.equals(DOWN) || key.equals(PUNCH) || key.equals(KICK);
+      return key.equals(UP) || key.equals(LEFT) || key.equals(RIGHT) || key.equals(DOWN) || key
+          .equals(PUNCH) || key.equals(KICK);
     }).bufferUntil(keyEvent -> {
       // buffer until Punch button or Kick button is pressed
       return ((String) keyEvent).equals(PUNCH) || ((String) keyEvent).equals(KICK);
-    }).subscribe(commandList -> {
-      String[] cl = {""};
-      commandList.forEach(keyEvent -> cl[0] += (String) keyEvent);
-      if (cl[0].contains(SYORYU_CL[0]) || cl[0].contains(SYORYU_CL[1])) {
-        startAction(3, 17, "shouryuuken.mp3");
-      } else if (cl[0].contains(HADOU_CL[0]) || cl[0].contains(HADOU_CL[1]) || cl[0].contains(HADOU_CL[2]) || cl[0].contains(HADOU_CL[3])) {
-        startAction(4, 14, "hadouken.mp3");
-      } else if (cl[0].contains(TATSUMAKI_CL[0]) || cl[0].contains(TATSUMAKI_CL[1]) || cl[0].contains(TATSUMAKI_CL[2])) {
-        startAction(5, 27, "tatsumaki_senpukyaku.mp3");
-      } else if (cl[0].contains(PUNCH)){
-        startAction(1, 8, "punch.mp3");
-      } else {
-        // should be KICK
-        startAction(2, 15, "kick.mp3");
+    }).publishOn(Schedulers.elastic());
+
+    BaseSubscriber<ArrayList<String>> subscriber = new BaseSubscriber<ArrayList<String>>() {
+
+      private int onNextAmount = 0;
+
+      @Override
+      protected void hookOnSubscribe(Subscription subscription) {
+        System.out.println("request 2 @ hookOnSubscribee");
+        request(2);
       }
-    });
+
+      @Override
+      protected void hookOnError(Throwable throwable) {
+        throwable.printStackTrace();
+      }
+
+      @Override
+      protected void hookOnComplete() {
+        System.out.println("hookOnComplete");
+      }
+
+      @Override
+      protected void hookOnNext(ArrayList<String> commandList) {
+        System.out.println("Subscriber > process... [" + commandList.toString() + "]");
+        String[] cl = {""};
+        commandList.forEach(keyEvent -> cl[0] += (String) keyEvent);
+        Thread currentThread = Thread.currentThread();
+        System.out.println("command=" + cl[0] + " is exeucted by thread=" + currentThread.getName());
+        if (cl[0].contains(SYORYU_CL[0]) || cl[0].contains(SYORYU_CL[1])) {
+          startAction(3, 17, "shouryuuken.mp3");
+        } else if (cl[0].contains(HADOU_CL[0]) || cl[0].contains(HADOU_CL[1]) || cl[0]
+            .contains(HADOU_CL[2]) || cl[0].contains(HADOU_CL[3])) {
+          startAction(4, 14, "hadouken.mp3");
+        } else if (cl[0].contains(TATSUMAKI_CL[0]) || cl[0].contains(TATSUMAKI_CL[1]) || cl[0]
+            .contains(TATSUMAKI_CL[2])) {
+          startAction(5, 27, "tatsumaki_senpukyaku.mp3");
+        } else if (cl[0].contains(PUNCH)) {
+          startAction(1, 8, "punch.mp3");
+        } else {
+          startAction(2, 15, "kick.mp3");
+        }
+
+        onNextAmount++;
+
+        if (onNextAmount % 2 == 0) {
+          System.out.println("not request  @ hookOnNext");
+          request(2);
+        }
+      }
+    };
+
+    flux.subscribe(subscriber);
   }
 
   private static void loadGraphics() {

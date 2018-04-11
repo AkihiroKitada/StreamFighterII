@@ -1,5 +1,8 @@
 package quitada;
 
+import org.reactivestreams.Subscription;
+
+import java.util.ArrayList;
 import java.util.HashSet;
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
@@ -12,7 +15,10 @@ import javafx.scene.media.AudioClip;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 import javafx.stage.Stage;
+import reactor.core.publisher.BaseSubscriber;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.FluxSink;
+import reactor.core.scheduler.Schedulers;
 
 public class RyuWithReactiveStreamsV3 extends Application {
   static private Scene mainScene;
@@ -127,7 +133,10 @@ public class RyuWithReactiveStreamsV3 extends Application {
   private static void prepareActionHandlers() {
     // use a set so duplicates are not possible
     currentlyActiveKeys = new HashSet<String>();
-    Flux.create(sink -> {
+
+    //Schedulers.DEFAULT_POOL_SIZE = 8;
+
+    Flux flux = Flux.create(sink -> {
       mainScene.setOnKeyPressed(keyEvent -> {
         String pressedKey = keyEvent.getCode().toString();
         currentlyActiveKeys.add(pressedKey);
@@ -146,28 +155,57 @@ public class RyuWithReactiveStreamsV3 extends Application {
         }
         sink.next(releasedKey.toLowerCase());
       });
-    }).filter(keyEvent -> {
+    }, FluxSink.OverflowStrategy.BUFFER).filter(keyEvent -> {
       // accept only the specific key events
       String key = ((String) keyEvent).toUpperCase();
       return key.equals(UP) || key.equals(LEFT) || key.equals(RIGHT) || key.equals(DOWN) || key.equals(PUNCH) || key.equals(KICK);
     }).bufferUntil(keyEvent -> {
       // buffer until Punch button or Kick button is pressed
+      //System.out.println("Buffering...");
       return ((String) keyEvent).equals(PUNCH) || ((String) keyEvent).equals(KICK);
-    }).subscribe(commandList -> {
-      String[] cl = {""};
-      commandList.forEach(keyEvent -> cl[0] += (String) keyEvent);
-      if (cl[0].contains(SYORYU_CL[0]) || cl[0].contains(SYORYU_CL[1])) {
-        resetAction(3, 17, "shouryuuken.mp3");
-      } else if (cl[0].contains(HADOU_CL[0]) || cl[0].contains(HADOU_CL[1]) || cl[0].contains(HADOU_CL[2]) || cl[0].contains(HADOU_CL[3])) {
-        resetAction(4, 14, "hadouken.mp3");
-      } else if (cl[0].contains(TATSUMAKI_CL[0]) || cl[0].contains(TATSUMAKI_CL[1]) || cl[0].contains(TATSUMAKI_CL[2])) {
-        resetAction(5, 27, "tatsumaki_senpukyaku.mp3");
-      } else if (cl[0].contains(PUNCH) && ryuAction != 1){
-        resetAction(1, 8, "punch.mp3");
-      } else if (cl[0].contains(KICK) && ryuAction != 2) {
-        resetAction(2, 15, "kick.mp3");
+    }).publishOn(Schedulers.elastic());
+
+    BaseSubscriber<ArrayList<String>> subscriber = new BaseSubscriber<ArrayList<String>>() {
+      private int onNextAmount = 0;
+
+      @Override
+      protected void hookOnSubscribe(Subscription subscription) {
+        request(2);
       }
-    });
+
+      @Override
+      protected void hookOnError(Throwable throwable) {
+        throwable.printStackTrace();
+      }
+
+      @Override
+      protected void hookOnComplete() {
+      }
+
+      @Override
+      protected void hookOnNext(ArrayList<String> commandList) {
+        String[] cl = {""};
+        commandList.forEach(keyEvent -> cl[0] += (String) keyEvent);
+        if (cl[0].contains(SYORYU_CL[0]) || cl[0].contains(SYORYU_CL[1])) {
+          resetAction(3, 17, "shouryuuken.mp3");
+        } else if (cl[0].contains(HADOU_CL[0]) || cl[0].contains(HADOU_CL[1]) || cl[0].contains(HADOU_CL[2]) || cl[0].contains(HADOU_CL[3])) {
+          resetAction(4, 14, "hadouken.mp3");
+        } else if (cl[0].contains(TATSUMAKI_CL[0]) || cl[0].contains(TATSUMAKI_CL[1]) || cl[0].contains(TATSUMAKI_CL[2])) {
+          resetAction(5, 27, "tatsumaki_senpukyaku.mp3");
+        } else if (cl[0].contains(PUNCH) && ryuAction != 1){
+          resetAction(1, 8, "punch.mp3");
+        } else if (cl[0].contains(KICK) && ryuAction != 2) {
+          resetAction(2, 15, "kick.mp3");
+        }
+
+        onNextAmount++;
+        if (onNextAmount % 2 == 0) {
+          request(2);
+        }
+      }
+    };
+
+    flux.subscribe(subscriber);
   }
 
   private static void loadGraphics() {
