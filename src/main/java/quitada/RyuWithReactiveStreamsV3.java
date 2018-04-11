@@ -163,9 +163,9 @@ public class RyuWithReactiveStreamsV3 extends Application {
       // buffer until Punch button or Kick button is pressed
       //System.out.println("Buffering...");
       return ((String) keyEvent).equals(PUNCH) || ((String) keyEvent).equals(KICK);
-    }).publishOn(Schedulers.elastic());
+    }).publishOn(Schedulers.elastic()); // <== non-blocking implementation
 
-    BaseSubscriber<ArrayList<String>> subscriber = new BaseSubscriber<ArrayList<String>>() {
+    BaseSubscriber<ArrayList<String>> subscriber = new BaseSubscriber<ArrayList<String>>() { // back-pressure implementation
       private int onNextAmount = 0;
 
       @Override
