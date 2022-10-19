@@ -59,7 +59,3 @@ You have to prepare additional gif files and mp3 files to run this application b
 
 Please just execute quitada.RyuWithoutReactiveStreamsV2 or quitada.RyuWithReactiveStreamsV2 or quitada.RyuWithReactiveStreamsV3 from your favorite Java IDE or console while you need to add the following parameters required for JavaFX:
 * --module-path /path/to/javafx-sdk-**.*.*/lib --add-modules=javafx.controls,javafx.fxml,javafx.media
-
-And also, you should set environment variable to set native libraries as below:
-* Linux or macOS: LD_LIBRARY_PATH=/path/to/javafx-sdk-**.*.*/lib
-* Windows: PATH=C:\path\to\javafx-sdk-**.*.*\lib
