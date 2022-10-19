@@ -116,11 +116,11 @@ public class RyuWithReactiveStreamsV2 extends Application {
       }
     }.start();
 
-    media = new Media(getResource("ryu-stage.mp3"));
+    /*media = new Media(getResource("ryu-stage.mp3"));
     mp = new MediaPlayer(media);
     mp.setCycleCount(MediaPlayer.INDEFINITE);
     mp.setVolume(0.5);
-    mp.play();
+    mp.play();*/
 
     mainStage.show();
   }

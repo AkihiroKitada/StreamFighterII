@@ -125,11 +125,11 @@ public class RyuWithoutReactiveStreamsV2 extends Application {
     }.start();
 
     //String path = getResource("ryu-stage.mp3").toString();
-    media = new Media(getResource("ryu-stage.mp3").toString());
+    /*media = new Media(getResource("ryu-stage.mp3").toString());
     mp = new MediaPlayer(media);
     mp.setCycleCount(MediaPlayer.INDEFINITE);
     mp.setVolume(0.5);
-    mp.play();
+    mp.play();*/
 
     mainStage.show();
   }
@@ -141,11 +141,18 @@ public class RyuWithoutReactiveStreamsV2 extends Application {
       @Override
       public void handle(KeyEvent event) {
         String keyEvent = event.getCode().toString();
+        System.out.println(keyEvent + " is pressed.");
         currentlyActiveKeys.add(keyEvent);
         if (keyActionChecker(keyEvent)) {
           commandList.add(keyEvent);
           if (keyEvent.equals(PUNCH) || keyEvent.equals(KICK)) {
             String cl = readCommand();
+            /*try {
+              Thread currentThread = Thread.currentThread();
+              currentThread.sleep(13000);
+            } catch (InterruptedException iex) {
+              ;
+            }*/
             if (cl.contains(SYORYU_CL[0]) || cl.contains(SYORYU_CL[1])) {
               startAction(3, 17, "shouryuuken.mp3");
             } else if (cl.contains(HADOU_CL[0]) || cl.contains(HADOU_CL[1]) || cl.contains(HADOU_CL[2]) || cl.contains(HADOU_CL[3])) {
@@ -166,6 +173,7 @@ public class RyuWithoutReactiveStreamsV2 extends Application {
       @Override
       public void handle(KeyEvent event) {
         String keyEvent = event.getCode().toString();
+        System.out.println(keyEvent + " is released.");
         currentlyActiveKeys.remove(keyEvent);
         if (keyActionChecker(keyEvent)) {
           commandList.add(keyEvent.toLowerCase());

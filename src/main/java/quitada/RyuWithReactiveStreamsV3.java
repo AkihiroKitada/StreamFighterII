@@ -2,6 +2,7 @@ package quitada;
 
 import org.reactivestreams.Subscription;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashSet;
 import javafx.animation.AnimationTimer;
@@ -81,6 +82,12 @@ public class RyuWithReactiveStreamsV3 extends Application {
 
   static private Media media;
   static private MediaPlayer mp;
+
+  static private AudioClip clip;
+
+  //static private Media se;
+  //static private MediaPlayer sep;
+
 
   public static void main(String[] args) {
     launch(args);
@@ -467,7 +474,9 @@ public class RyuWithReactiveStreamsV3 extends Application {
   }
 
   private static void ryuVoice(String file) {
-    AudioClip clip = new AudioClip(getResource(file));
+    clip = new AudioClip(getResource(file));
+    // need to set rate other than default value (i.e, 1) to prevent audio issue, somehow
+    clip.setRate(0.99);
     clip.play();
   }
 
