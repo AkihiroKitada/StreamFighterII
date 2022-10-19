@@ -422,6 +422,8 @@ public class RyuWithReactiveStreamsV2 extends Application {
 
   private static void ryuVoice(String file) {
     AudioClip clip = new AudioClip(getResource(file));
+    // need to set rate other than default value (i.e, 1) to prevent audio issue, somehow
+    clip.setRate(0.99);
     clip.play();
   }
 
