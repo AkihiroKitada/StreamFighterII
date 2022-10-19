@@ -19,7 +19,7 @@ Sample implementation to deliver "Shoryuken" and other Ryu's deathblows based on
 
 ## Prepartion to run this appliction
 
-You have to prepare additional gif files and mp3 files to run this application becasue they are grabbed from other public site (they are not mine). Please get those files according to the instruction below and put them under /src/main/resources/quitada.
+You have to prepare additional gif files and mp3 files to run this application becasue they are grabbed from other public site (they are not mine). Please get those files according to the instruction below and put them under /src/main/resources/quitada while those required resource files have been uploaded on this github project and you can use them.
 
 * Sound files for each actions and back ground music (for Ryu stage)
   * Shoryuken: get a mp3 file from the following site and save as "shouryuuken.mp3".
@@ -57,4 +57,9 @@ You have to prepare additional gif files and mp3 files to run this application b
 
 ## Run this appliction
 
-Please just execute quitada.RyuWithoutReactiveStreamsV2 or quitada.RyuWithReactiveStreamsV2 or quitada.RyuWithReactiveStreamsV3 from your favorite Java IDE or console.
+Please just execute quitada.RyuWithoutReactiveStreamsV2 or quitada.RyuWithReactiveStreamsV2 or quitada.RyuWithReactiveStreamsV3 from your favorite Java IDE or console while you need to add the following parameters required for JavaFX:
+* --module-path /path/to/javafx-sdk-**.*.*/lib --add-modules=javafx.controls,javafx.fxml,javafx.media
+
+And also, you should set environment variable to set native libraries as below:
+* Linux or macOS: LD_LIBRARY_PATH=/path/to/javafx-sdk-**.*.*/lib
+* Windows: PATH=C:\path\to\javafx-sdk-**.*.*\lib
